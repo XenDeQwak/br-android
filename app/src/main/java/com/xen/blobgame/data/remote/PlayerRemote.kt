@@ -24,13 +24,13 @@ data class NewPlayer (
 
 data class UpdatePlayer ( val name: String )
 
-const val apiEndPoint = "/players"
+const val playerEndPoint = "/players"
 
 interface PlayerApi {
-    @POST("$apiEndPoint/create")
+    @POST("$playerEndPoint/create")
     suspend fun createPlayer(@Body player: NewPlayer): PlayerModel
 
-    @PUT("$apiEndPoint/update/{id}")
+    @PUT("$playerEndPoint/update/{id}")
     suspend fun updatePlayer(
         @Path("id") id: Int,
         @Body player: UpdatePlayer
