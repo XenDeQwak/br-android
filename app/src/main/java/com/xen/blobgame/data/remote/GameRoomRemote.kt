@@ -19,7 +19,7 @@ data class GameRoomModel (
 )
 
 data class JoinRequest (
-    val id: Int
+    val playerId: Int
 )
 
 data class RoomRequest (
