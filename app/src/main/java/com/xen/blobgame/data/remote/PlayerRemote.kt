@@ -12,7 +12,7 @@ data class PlayerModel (
     val numOfWins: Int,
     val numOfLoss: Int,
     val createdAt: LocalDateTime,
-    val gameRoom: Int? //later change to GameRoomModel once GameRoomRemote is implemented
+    val gameRoom: GameRoomModel?
 )
 
 data class NewPlayer (
