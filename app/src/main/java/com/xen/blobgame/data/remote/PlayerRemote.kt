@@ -28,11 +28,11 @@ const val apiEndPoint = "/players"
 
 interface PlayerApi {
     @POST("$apiEndPoint/create")
-    suspend fun createPlayer(@Body player: PlayerModel): PlayerModel
+    suspend fun createPlayer(@Body player: NewPlayer): PlayerModel
 
     @PUT("$apiEndPoint/update/{id}")
     suspend fun updatePlayer(
         @Path("id") id: Int,
-        @Body player: PlayerModel
+        @Body player: UpdatePlayer
     ): PlayerModel
 }
