@@ -1,5 +1,6 @@
 package com.xen.blobgame.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -11,25 +12,41 @@ import kotlinx.coroutines.launch
 class GameRoomViewModel(private val gameRoomRepository: GameRoomRepository): ViewModel() {
     fun joinRoom(id: Int, playerId: JoinRequest) {
         viewModelScope.launch {
-            gameRoomRepository.joinRoom(id, playerId)
+            try {
+                gameRoomRepository.joinRoom(id, playerId)
+            } catch (e: Exception) {
+                Log.e("GameRoomViewModel", "Error joining room", e)
+            }
         }
     }
 
     fun createRoom(maxPlayers: RoomRequest) {
         viewModelScope.launch {
-            gameRoomRepository.createRoom(maxPlayers)
+            try {
+                gameRoomRepository.createRoom(maxPlayers)
+            } catch (e: Exception) {
+                Log.e("GameRoomViewModel", "Error creating room", e)
+            }
         }
     }
 
     fun updateRoom(id: Int, maxPlayers: RoomRequest) {
         viewModelScope.launch {
-            gameRoomRepository.updateRoom(id, maxPlayers)
+            try {
+                gameRoomRepository.updateRoom(id, maxPlayers)
+            } catch (e: Exception) {
+                Log.e("GameRoomViewModel", "Error updating room", e)
+            }
         }
     }
 
     fun deleteRoom(id: Int) {
         viewModelScope.launch {
-            gameRoomRepository.deleteRoom(id)
+            try {
+                gameRoomRepository.deleteRoom(id)
+            } catch (e: Exception) {
+                Log.e("GameRoomViewModel", "Error deleting room", e)
+            }
         }
     }
 
