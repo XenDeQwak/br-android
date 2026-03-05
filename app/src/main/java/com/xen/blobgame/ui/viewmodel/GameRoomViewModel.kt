@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.xen.blobgame.data.remote.CreateRequest
 import com.xen.blobgame.data.remote.JoinRequest
 import com.xen.blobgame.data.remote.RoomRequest
 import com.xen.blobgame.data.repository.GameRoomRepository
@@ -20,10 +21,10 @@ class GameRoomViewModel(private val gameRoomRepository: GameRoomRepository): Vie
         }
     }
 
-    fun createRoom(maxPlayers: RoomRequest) {
+    fun createRoom(createRequest: CreateRequest) {
         viewModelScope.launch {
             try {
-                gameRoomRepository.createRoom(maxPlayers)
+                gameRoomRepository.createRoom(createRequest)
             } catch (e: Exception) {
                 Log.e("GameRoomViewModel", "Error creating room", e)
             }

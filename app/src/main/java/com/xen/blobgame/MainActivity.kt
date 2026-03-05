@@ -15,6 +15,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
+import com.xen.blobgame.data.remote.CreateRequest
 import com.xen.blobgame.data.remote.GameRoomApi
 import com.xen.blobgame.data.remote.JoinRequest
 import com.xen.blobgame.data.remote.PlayerApi
@@ -99,12 +100,16 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         },
-                        onCreateRoom = { roomName ->
+                        onCreateRoom = { name, maxPlayers ->
                             lifecycleScope.launch {
                                 try {
                                     val id = currentPlayer?.id ?: return@launch
-                                    val maxPlayers = roomName.toIntOrNull() ?: 4
-                                    gameRoomViewModel.createRoom(RoomRequest(maxPlayers = maxPlayers))
+                                    gameRoomViewModel.createRoom(
+                                        CreateRequest(
+                                            name = name,
+                                            maxPlayers = maxPlayers
+                                        )
+                                    )
                                 } catch (e: Exception) {
                                     Log.e("MainActivity", "Error creating room", e)
                                     Toast.makeText(this@MainActivity, "Failed to create room: ${e.message}", Toast.LENGTH_LONG).show()

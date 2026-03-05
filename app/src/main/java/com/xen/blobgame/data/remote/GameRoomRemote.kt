@@ -26,6 +26,11 @@ data class RoomRequest (
     val maxPlayers: Int
 )
 
+data class CreateRequest (
+    val name: String,
+    val maxPlayers: Int
+)
+
 private const val gameRoomEndPoint = "/game-room"
 interface GameRoomApi {
     @POST("$gameRoomEndPoint/join/{id}")
@@ -33,7 +38,7 @@ interface GameRoomApi {
                          @Body playerId: JoinRequest): GameRoomModel
 
     @POST("$gameRoomEndPoint/create")
-    suspend fun createRoom(@Body maxPlayers: RoomRequest): GameRoomModel
+    suspend fun createRoom(@Body createRequest: CreateRequest): GameRoomModel
 
     @PUT("$gameRoomEndPoint/update/{id}")
     suspend fun updateRoom(@Path("id") id: Int,
