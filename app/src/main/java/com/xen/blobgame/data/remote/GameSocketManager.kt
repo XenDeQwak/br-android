@@ -10,7 +10,6 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import java.util.concurrent.TimeUnit
 
 class GameSocketManager {
     private val _messages = MutableSharedFlow<String>()
@@ -60,5 +59,11 @@ class GameSocketManager {
     }
     fun disconnect() {
         webSocket?.close(1000, null)
+    }
+
+    fun sendMove(json: String) {
+        webSocket?.send(
+            "SEND\ndestination:/app/move\ncontent-type:application/json\n\n$json\u0000"
+        )
     }
 }

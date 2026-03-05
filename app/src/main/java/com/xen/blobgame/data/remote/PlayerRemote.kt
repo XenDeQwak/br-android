@@ -1,5 +1,6 @@
 package com.xen.blobgame.data.remote
 
+import androidx.compose.ui.graphics.Color
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -20,6 +21,14 @@ data class NewPlayer (
     val numOfWins: Int = 0,
     val numOfLoss: Int = 0,
     val createdAt: LocalDateTime = LocalDateTime.now()
+)
+
+data class PlayerUi(
+    val id: Int,
+    val x: Float,
+    val y: Float,
+    val isAlive: Boolean,
+    val color: Color
 )
 
 data class UpdatePlayer ( val name: String )
