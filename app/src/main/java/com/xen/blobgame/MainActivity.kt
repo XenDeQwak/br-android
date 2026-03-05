@@ -6,6 +6,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -15,15 +17,17 @@ import com.google.gson.JsonPrimitive
 import com.google.gson.JsonSerializer
 import com.xen.blobgame.data.remote.GameRoomApi
 import com.xen.blobgame.data.remote.JoinRequest
-import com.xen.blobgame.data.remote.NewPlayer
 import com.xen.blobgame.data.remote.PlayerApi
 import com.xen.blobgame.data.remote.RoomRequest
 import com.xen.blobgame.data.repository.GameRoomRepository
+import com.xen.blobgame.data.repository.PlayerRepository
 import com.xen.blobgame.ui.composable.GameScreen
+import com.xen.blobgame.ui.composable.LoginScreen
 import com.xen.blobgame.ui.composable.MainMenuScreen
 import com.xen.blobgame.ui.theme.BlobGameTheme
 import com.xen.blobgame.ui.viewmodel.GameRoomViewModel
 import com.xen.blobgame.ui.viewmodel.GameSessionViewModel
+import com.xen.blobgame.ui.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -34,8 +38,8 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var gameViewModel: GameSessionViewModel
     private lateinit var gameRoomViewModel: GameRoomViewModel
-    private var currentScreen = mutableStateOf("menu")
-    private var currentPlayerId: Int? = null
+    private lateinit var playerViewModel: PlayerViewModel
+    private var currentScreen = mutableStateOf("login")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,23 +60,34 @@ class MainActivity : ComponentActivity() {
 
         val gameRoomApi = retrofit.create(GameRoomApi::class.java)
         val playerApi = retrofit.create(PlayerApi::class.java)
-        val repository = GameRoomRepository(gameRoomApi)
+        
+        val gameRoomRepository = GameRoomRepository(gameRoomApi)
+        val playerRepository = PlayerRepository(playerApi)
 
         gameViewModel = ViewModelProvider(this)[GameSessionViewModel::class.java]
 
-        val factory = GameRoomViewModel.Factory(repository)
-        gameRoomViewModel = ViewModelProvider(this, factory)[GameRoomViewModel::class.java]
+        val gameRoomFactory = GameRoomViewModel.Factory(gameRoomRepository)
+        gameRoomViewModel = ViewModelProvider(this, gameRoomFactory)[GameRoomViewModel::class.java]
+        
+        val playerFactory = PlayerViewModel.Factory(playerRepository)
+        playerViewModel = ViewModelProvider(this, playerFactory)[PlayerViewModel::class.java]
 
         setContent {
             BlobGameTheme {
+                val currentPlayer by playerViewModel.currentPlayer.collectAsState()
+                
                 when (currentScreen.value) {
+                    "login" -> LoginScreen(
+                        viewModel = playerViewModel,
+                        onPlayerCreated = {
+                            currentScreen.value = "menu"
+                        }
+                    )
                     "menu" -> MainMenuScreen(
                         onJoinRoom = { roomId ->
                             lifecycleScope.launch {
                                 try {
-                                    val id = currentPlayerId ?: createNewPlayer(playerApi)
-                                    currentPlayerId = id
-
+                                    val id = currentPlayer?.id ?: return@launch
                                     gameRoomViewModel.joinRoom(roomId, JoinRequest(playerId = id))
 
                                     currentScreen.value = "game"
@@ -87,9 +102,7 @@ class MainActivity : ComponentActivity() {
                         onCreateRoom = { roomName ->
                             lifecycleScope.launch {
                                 try {
-                                    val id = currentPlayerId ?: createNewPlayer(playerApi)
-                                    currentPlayerId = id
-
+                                    val id = currentPlayer?.id ?: return@launch
                                     val maxPlayers = roomName.toIntOrNull() ?: 4
                                     gameRoomViewModel.createRoom(RoomRequest(maxPlayers = maxPlayers))
                                 } catch (e: Exception) {
@@ -106,10 +119,5 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private suspend fun createNewPlayer(playerApi: PlayerApi): Int {
-        val player = playerApi.createPlayer(NewPlayer(name = "Player_${System.currentTimeMillis()}"))
-        return player.id
     }
 }
