@@ -52,9 +52,9 @@ class GameSocketManager {
             "SUBSCRIBE\nid:sub-0\ndestination:$destination\n\n\u0000"
         )
     }
-    fun sendAttack(jsonBody: String) {
+    fun sendAttack(json: String) {
         webSocket?.send(
-            "SEND\ndestination:/app/attack\ncontent-type:application/json\n\n$jsonBody\u0000"
+            "SEND\ndestination:/app/attack\ncontent-type:application/json\n\n$json\u0000"
         )
     }
     fun disconnect() {

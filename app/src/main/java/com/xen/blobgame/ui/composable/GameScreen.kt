@@ -1,6 +1,5 @@
 package com.xen.blobgame.ui.composable
 
-import android.graphics.Color
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
