@@ -1,5 +1,7 @@
 package com.xen.blobgame.data.remote
 
+import retrofit2.http.POST
+import retrofit2.http.Query
 import java.util.UUID
 
 data class PlayerModel (
@@ -10,6 +12,10 @@ data class PlayerModel (
     val playerGameState: PlayerGameStateModel
 )
 
+const val playerEndpoint = "/player"
 
-class PlayerApi {
+interface PlayerApi {
+    @POST("$playerEndpoint/create")
+    suspend fun createPlayer(@Query("name") name: String): PlayerModel
+    //TODO: GAMEPLAY API INTEGRATION AND REPOS
 }
