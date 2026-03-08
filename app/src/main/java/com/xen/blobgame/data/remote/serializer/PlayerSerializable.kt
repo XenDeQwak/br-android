@@ -20,4 +20,4 @@ data class MoveMessage (
     val roomId: Int,
     val playerId: Int,
     val position: Position
-) {}
+)

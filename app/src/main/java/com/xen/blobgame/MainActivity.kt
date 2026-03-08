@@ -19,21 +19,15 @@ import com.xen.blobgame.data.remote.CreateRequest
 import com.xen.blobgame.data.remote.GameRoomApi
 import com.xen.blobgame.data.remote.JoinRequest
 import com.xen.blobgame.data.remote.PlayerApi
-import com.xen.blobgame.data.remote.RoomRequest
-import com.xen.blobgame.data.repository.GameRoomRepository
-import com.xen.blobgame.data.repository.PlayerRepository
 import com.xen.blobgame.ui.composable.GameScreen
 import com.xen.blobgame.ui.composable.LoginScreen
-import com.xen.blobgame.ui.composable.MainMenuScreen
 import com.xen.blobgame.ui.theme.BlobGameTheme
-import com.xen.blobgame.ui.viewmodel.GameRoomViewModel
-import com.xen.blobgame.ui.viewmodel.GameSessionViewModel
-import com.xen.blobgame.ui.viewmodel.PlayerViewModel
 import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import com.xen.blobgame.ui.composable.MainMenuScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -93,7 +87,6 @@ class MainActivity : ComponentActivity() {
 
                                     currentScreen.value = "game"
                                     gameViewModel.startSession(playerId = id, roomId = roomId)
-                                    gameViewModel.connect()
                                 } catch (e: Exception) {
                                     Log.e("MainActivity", "Error joining room", e)
                                     Toast.makeText(this@MainActivity, "Failed to join room: ${e.message}", Toast.LENGTH_LONG).show()
@@ -103,13 +96,19 @@ class MainActivity : ComponentActivity() {
                         onCreateRoom = { name, maxPlayers ->
                             lifecycleScope.launch {
                                 try {
-                                    val id = currentPlayer?.id ?: return@launch
-                                    gameRoomViewModel.createRoom(
+                                    val playerId = currentPlayer?.id ?: return@launch
+                                    val room = gameRoomViewModel.createRoom(
                                         CreateRequest(
                                             name = name,
                                             maxPlayers = maxPlayers
                                         )
                                     )
+                                    if (room != null) {
+                                        currentScreen.value = "game"
+                                        gameViewModel.startSession(playerId = playerId, roomId = room.id)
+                                    } else {
+                                        Toast.makeText(this@MainActivity, "Failed to create room", Toast.LENGTH_SHORT).show()
+                                    }
                                 } catch (e: Exception) {
                                     Log.e("MainActivity", "Error creating room", e)
                                     Toast.makeText(this@MainActivity, "Failed to create room: ${e.message}", Toast.LENGTH_LONG).show()
