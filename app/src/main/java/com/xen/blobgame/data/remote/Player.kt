@@ -10,6 +10,6 @@ data class PlayerModel (
     val playerGameState: PlayerGameStateModel
 )
 
-class PlayerApi {
 
+class PlayerApi {
 }
