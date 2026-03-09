@@ -5,7 +5,7 @@ import retrofit2.http.Query
 import java.util.UUID
 
 data class PlayerModel (
-    val id: UUID,
+    val id: String,
     val name: String,
     val numOfKills: Int,
     val sessionId: String,

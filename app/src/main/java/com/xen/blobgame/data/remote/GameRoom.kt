@@ -3,10 +3,9 @@ package com.xen.blobgame.data.remote
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
-import java.util.UUID
 
 data class GameRoomModel (
-    private val id: UUID,
+    private val id: String,
     private val roomCode: String,
     private val status: Status,
     private val name: String,
@@ -15,11 +14,11 @@ data class GameRoomModel (
 )
 
 data class GameRoomRequest(
-    val playerId: UUID
+    val playerId: String?
 )
 
 
-const val roomEndPoint = "/room"
+const val roomEndPoint = "/game-room"
 
 interface GameRoomApi {
     @POST("$roomEndPoint/create")

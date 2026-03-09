@@ -9,13 +9,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class PlayerViewModel(private val repository: PlayerRepository): ViewModel() {
     private val _currentPlayer = MutableStateFlow<PlayerModel?>(null)
     val currentPlayer: StateFlow<PlayerModel?> = _currentPlayer.asStateFlow()
     fun createPlayer(name: String) {
         viewModelScope.launch {
-            repository.createPlayer(name)
+            val player = repository.createPlayer(name)
+            _currentPlayer.value = player
         }
     }
 

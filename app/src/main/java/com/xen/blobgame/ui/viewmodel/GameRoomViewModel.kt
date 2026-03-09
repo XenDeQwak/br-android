@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.xen.blobgame.data.remote.GameRoomRequest
+import com.xen.blobgame.data.remote.PlayerModel
 import com.xen.blobgame.data.repository.GameRoomRepository
 import kotlinx.coroutines.launch
 
