@@ -17,5 +17,4 @@ const val playerEndpoint = "/player"
 interface PlayerApi {
     @POST("$playerEndpoint/create")
     suspend fun createPlayer(@Query("name") name: String): PlayerModel
-    //TODO: GAMEPLAY API INTEGRATION AND REPOS
 }
