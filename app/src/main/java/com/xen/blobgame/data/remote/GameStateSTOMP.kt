@@ -2,6 +2,8 @@ package com.xen.blobgame.data.remote
 
 import com.xen.blobgame.data.remote.serializer.AttackMessage
 import com.xen.blobgame.data.remote.serializer.MoveMessage
+import com.xen.blobgame.data.remote.serializer.PlayerGameStateModel
+import com.xen.blobgame.data.remote.serializer.RoomStateMessage
 import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -10,14 +12,13 @@ import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
 import ua.naiksoftware.stomp.dto.StompMessage
-import java.util.UUID
 
 class GameStateSTOMP {
     private val stompClient: StompClient =
         Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws")
     private var roomSubscription: Disposable? = null
     private var lifeCycleDisposable: Disposable? = null
-    private val _gameState = MutableSharedFlow<PlayerGameStateModel>()
+    private val _gameState = MutableSharedFlow<RoomStateMessage>()
     val gameState = _gameState.asSharedFlow()
 
     fun connect() {
@@ -45,7 +46,7 @@ class GameStateSTOMP {
             .subscribe(
                 { message: StompMessage ->
                     val payload = message.payload
-                    val state = Json.decodeFromString<PlayerGameStateModel>(payload)
+                    val state = Json.decodeFromString<RoomStateMessage>(payload)
                     _gameState.tryEmit(state)
 
                 },

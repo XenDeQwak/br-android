@@ -1,30 +1,23 @@
 package com.xen.blobgame.data.repository
 
 import com.xen.blobgame.data.remote.GameStateSTOMP
-import com.xen.blobgame.data.remote.PlayerGameStateModel
+import com.xen.blobgame.data.remote.serializer.PlayerGameStateModel
 import com.xen.blobgame.data.remote.serializer.AttackMessage
 import com.xen.blobgame.data.remote.serializer.MoveMessage
+import com.xen.blobgame.data.remote.serializer.RoomStateMessage
 import kotlinx.coroutines.flow.SharedFlow
 
 class PlayerGameStateRepository(
     private val socket: GameStateSTOMP
 ) {
-    val gameState: SharedFlow<PlayerGameStateModel> = socket.gameState
+    val gameState: SharedFlow<RoomStateMessage> = socket.gameState
 
     fun connect(roomId: String) {
         socket.connect()
         socket.subscribeToRoom(roomId)
     }
 
-    fun attack(message: AttackMessage) {
-        socket.sendAttack(message)
-    }
-
-    fun move(message: MoveMessage) {
-        socket.sendMove(message)
-    }
-
-    fun disconnect() {
-        socket.unSubscribe()
-    }
+    fun attack(message: AttackMessage) = socket.sendAttack(message)
+    fun move(message: MoveMessage) = socket.sendMove(message)
+    fun disconnect() = socket.unSubscribe()
 }

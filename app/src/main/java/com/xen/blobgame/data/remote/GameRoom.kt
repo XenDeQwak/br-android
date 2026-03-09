@@ -3,9 +3,10 @@ package com.xen.blobgame.data.remote
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query
+import java.util.UUID
 
 data class GameRoomModel (
-    private val id: String,
+    val id: String,
     private val roomCode: String,
     private val status: Status,
     private val name: String,
@@ -14,7 +15,7 @@ data class GameRoomModel (
 )
 
 data class GameRoomRequest(
-    val id: String?
+    val id: UUID
 )
 
 

@@ -32,8 +32,7 @@ fun MenuScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
-        // ==================== JOIN ROOM SECTION ====================
+        
         Text(
             text = "Join Room",
             style = MaterialTheme.typography.titleMedium

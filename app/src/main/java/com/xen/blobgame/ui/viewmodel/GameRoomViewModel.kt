@@ -3,12 +3,18 @@ package com.xen.blobgame.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.xen.blobgame.data.remote.GameRoomModel
 import com.xen.blobgame.data.remote.GameRoomRequest
 import com.xen.blobgame.data.remote.PlayerModel
 import com.xen.blobgame.data.repository.GameRoomRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class GameRoomViewModel(private val repository: GameRoomRepository): ViewModel() {
+
+    private val _currentRoom = MutableStateFlow<GameRoomModel?>(null)
+    val currentRoom = _currentRoom.asStateFlow()
     fun createRoom(playerId: GameRoomRequest, maxPlayers: Int, roomName: String) {
         viewModelScope.launch {
             repository.createRoom(playerId, maxPlayers, roomName)

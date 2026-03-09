@@ -1,6 +1,7 @@
 package com.xen.blobgame.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.xen.blobgame.data.remote.serializer.AttackMessage
 import com.xen.blobgame.data.remote.serializer.MoveMessage
 import com.xen.blobgame.data.repository.PlayerGameStateRepository
@@ -16,4 +17,10 @@ class GameStateViewModel(
     fun move(message: MoveMessage) { repository.move(message) }
     fun disconnect() { repository.disconnect() }
     override fun onCleared() { repository.disconnect() }
+
+    class Factory(private val repository: PlayerGameStateRepository) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T =
+            GameStateViewModel(repository) as T
+    }
 }

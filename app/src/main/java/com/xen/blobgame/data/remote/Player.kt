@@ -1,11 +1,12 @@
 package com.xen.blobgame.data.remote
 
+import com.xen.blobgame.data.remote.serializer.PlayerGameStateModel
 import retrofit2.http.POST
 import retrofit2.http.Query
 import java.util.UUID
 
 data class PlayerModel (
-    val id: String,
+    val id: UUID,
     val name: String,
     val numOfKills: Int,
     val sessionId: String,
