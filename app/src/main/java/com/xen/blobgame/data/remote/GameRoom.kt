@@ -14,7 +14,7 @@ data class GameRoomModel (
 )
 
 data class GameRoomRequest(
-    val playerId: String?
+    val id: String?
 )
 
 
@@ -22,9 +22,10 @@ const val roomEndPoint = "/game-room"
 
 interface GameRoomApi {
     @POST("$roomEndPoint/create")
-    suspend fun createRoom(@Query("maxPlayers") maxPlayers: Int,
-                           @Query("roomName") roomName: String,
-                           @Body gameRoomRequest: GameRoomRequest
+    suspend fun createRoom(
+                           @Body gameRoomRequest: GameRoomRequest,
+                           @Query("maxPlayers") maxPlayers: Int,
+                           @Query("roomName") roomName: String
     ): GameRoomModel
 
     @POST("$roomEndPoint/join")
