@@ -5,9 +5,9 @@ import com.xen.blobgame.data.remote.GameRoomRequest
 
 class GameRoomRepository(private val api: GameRoomApi) {
     suspend fun createRoom(
+        playerId: GameRoomRequest,
         maxPlayers: Int,
-        roomName: String,
-        playerId: GameRoomRequest) = api.createRoom(maxPlayers, roomName, playerId)
+        roomName: String) = api.createRoom( playerId, maxPlayers, roomName,)
     suspend fun joinRoom(
         roomCode: String,
         playerId: GameRoomRequest) = api.joinRoom(roomCode, playerId)

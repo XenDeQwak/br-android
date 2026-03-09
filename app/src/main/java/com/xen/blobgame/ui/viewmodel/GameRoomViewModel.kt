@@ -9,9 +9,9 @@ import com.xen.blobgame.data.repository.GameRoomRepository
 import kotlinx.coroutines.launch
 
 class GameRoomViewModel(private val repository: GameRoomRepository): ViewModel() {
-    fun createRoom(maxGameRooms: Int, roomName: String, playerId: GameRoomRequest) {
+    fun createRoom(playerId: GameRoomRequest, maxPlayers: Int, roomName: String) {
         viewModelScope.launch {
-            repository.createRoom(maxGameRooms, roomName, playerId)
+            repository.createRoom(playerId, maxPlayers, roomName)
         }
     }
 

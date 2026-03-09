@@ -120,7 +120,7 @@ fun MenuScreen(
             onClick = {
                 if (createRoomName.isNotBlank() && player != null) {
                     val request = GameRoomRequest(player!!.id)
-                    gameRoomViewModel.createRoom(selectedMaxPlayers, createRoomName, request)
+                    gameRoomViewModel.createRoom(request, selectedMaxPlayers, createRoomName)
                     onRoomCreated()
                 }
             },

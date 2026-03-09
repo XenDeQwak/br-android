@@ -17,6 +17,7 @@ class PlayerViewModel(private val repository: PlayerRepository): ViewModel() {
     fun createPlayer(name: String) {
         viewModelScope.launch {
             val player = repository.createPlayer(name)
+            println("PLAYER ID: ${player.id}")
             _currentPlayer.value = player
         }
     }
