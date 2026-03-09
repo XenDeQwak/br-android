@@ -18,45 +18,77 @@ fun MenuScreen(
     onRoomJoined: () -> Unit,
     onRoomCreated: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var roomCode by remember { mutableStateOf("") }
+    var joinRoomCode by remember { mutableStateOf("") }
+    var createRoomName by remember { mutableStateOf("") }
     var maxPlayersExpanded by remember { mutableStateOf(false) }
     var selectedMaxPlayers by remember { mutableStateOf(4) }
     val player by playerViewModel.currentPlayer.collectAsState()
-
     val maxPlayersOptions = (4..10).toList()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text("Enter room name")
+        // ==================== JOIN ROOM SECTION ====================
+        Text(
+            text = "Join Room",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
         OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
+            value = joinRoomCode,
+            onValueChange = { joinRoomCode = it },
             singleLine = true,
-            label = { Text("Name") }
+            label = { Text("Room Code") },
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        Text("Room Code (to join)")
+        Button(
+            onClick = {
+                if (joinRoomCode.isNotBlank() && player != null) {
+                    val request = GameRoomRequest(player!!.id)
+                    gameRoomViewModel.joinRoom(joinRoomCode, request)
+                    onRoomJoined()
+                }
+            },
+            enabled = joinRoomCode.isNotBlank() && player != null,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Join Room")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        Divider()
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ==================== CREATE ROOM SECTION ====================
+        Text(
+            text = "Create Room",
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
         OutlinedTextField(
-            value = roomCode,
-            onValueChange = { roomCode = it },
+            value = createRoomName,
+            onValueChange = { createRoomName = it },
             singleLine = true,
-            label = { Text("Room Code") }
+            label = { Text("Room Name") },
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         ExposedDropdownMenuBox(
             expanded = maxPlayersExpanded,
-            onExpandedChange = { maxPlayersExpanded = !maxPlayersExpanded }
+            onExpandedChange = { maxPlayersExpanded = !maxPlayersExpanded },
+            modifier = Modifier.fillMaxWidth()
         ) {
             OutlinedTextField(
                 value = selectedMaxPlayers.toString(),
@@ -64,7 +96,7 @@ fun MenuScreen(
                 readOnly = true,
                 label = { Text("Max Players") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = maxPlayersExpanded) },
-                modifier = Modifier.menuAnchor()
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
             ExposedDropdownMenu(
                 expanded = maxPlayersExpanded,
@@ -82,31 +114,17 @@ fun MenuScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(
             onClick = {
-                if (roomCode.isNotBlank()) {
+                if (createRoomName.isNotBlank() && player != null) {
                     val request = GameRoomRequest(player!!.id)
-                    gameRoomViewModel.joinRoom(roomCode, request)
-                    onRoomJoined()
+                    gameRoomViewModel.createRoom(selectedMaxPlayers, createRoomName, request)
+                    onRoomCreated()
                 }
             },
-            enabled = name.isNotBlank(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Join Room")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                val request = GameRoomRequest(player!!.id)
-                gameRoomViewModel.createRoom(selectedMaxPlayers, name, request)
-                onRoomCreated()
-            },
-            enabled = name.isNotBlank(),
+            enabled = createRoomName.isNotBlank() && player != null,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Create Room")
