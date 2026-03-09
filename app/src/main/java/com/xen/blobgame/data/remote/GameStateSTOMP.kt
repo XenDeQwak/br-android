@@ -39,7 +39,7 @@ class GameStateSTOMP {
         }
     }
 
-    fun subscribeToRoom(roomId: UUID) {
+    fun subscribeToRoom(roomId: String) {
         roomSubscription = stompClient
             .topic("/topic/room/$roomId")
             .subscribe(
