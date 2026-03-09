@@ -1,7 +1,10 @@
 package com.xen.blobgame.data.remote
 
 import com.xen.blobgame.data.remote.serializer.AttackMessage
+import com.xen.blobgame.data.remote.serializer.MoveMessage
 import io.reactivex.disposables.Disposable
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.serialization.json.Json
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
@@ -11,9 +14,11 @@ import java.util.UUID
 
 class GameStateSTOMP {
     private val stompClient: StompClient =
-        Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2/ws")
+        Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws")
     private var roomSubscription: Disposable? = null
     private var lifeCycleDisposable: Disposable? = null
+    private val _gameState = MutableSharedFlow<PlayerGameStateModel>()
+    val gameState = _gameState.asSharedFlow()
 
     fun connect() {
         stompClient.connect()
@@ -40,7 +45,9 @@ class GameStateSTOMP {
             .subscribe(
                 { message: StompMessage ->
                     val payload = message.payload
-                    println(payload)
+                    val state = Json.decodeFromString<PlayerGameStateModel>(payload)
+                    _gameState.tryEmit(state)
+
                 },
                 { error ->
                     println("Subscription error: ${error.message}")
@@ -51,6 +58,11 @@ class GameStateSTOMP {
     fun sendAttack(message: AttackMessage) {
         val json = Json.encodeToString(message)
         stompClient.send("/app/attack", json).subscribe()
+    }
+
+    fun sendMove(message: MoveMessage) {
+        val json = Json.encodeToString(message)
+        stompClient.send("/app/move", json).subscribe()
     }
 
     fun unSubscribe() {
