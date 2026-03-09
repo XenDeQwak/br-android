@@ -10,14 +10,14 @@ data class Position (
 
 @Serializable
 data class AttackMessage (
-    val roomId: Int,
-    val attackerId: Int,
-    val targetId: Int
+    val roomId: String,
+    val attackerId: String,
+    val targetId: String
 )
 
 @Serializable
 data class MoveMessage (
-    val roomId: Int,
-    val playerId: Int,
+    val roomId: String,
+    val playerId: String,
     val position: Position
 )
