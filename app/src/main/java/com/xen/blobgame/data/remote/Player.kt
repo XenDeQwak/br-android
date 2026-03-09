@@ -12,7 +12,7 @@ data class PlayerModel (
     val playerGameState: PlayerGameStateModel
 )
 
-const val playerEndpoint = "/player"
+const val playerEndpoint = "/players"
 
 interface PlayerApi {
     @POST("$playerEndpoint/create")

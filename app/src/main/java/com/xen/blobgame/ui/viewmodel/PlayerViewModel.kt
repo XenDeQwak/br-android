@@ -3,10 +3,16 @@ package com.xen.blobgame.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.xen.blobgame.data.remote.PlayerModel
 import com.xen.blobgame.data.repository.PlayerRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PlayerViewModel(private val repository: PlayerRepository): ViewModel() {
+    private val _currentPlayer = MutableStateFlow<PlayerModel?>(null)
+    val currentPlayer: StateFlow<PlayerModel?> = _currentPlayer.asStateFlow()
     fun createPlayer(name: String) {
         viewModelScope.launch {
             repository.createPlayer(name)
