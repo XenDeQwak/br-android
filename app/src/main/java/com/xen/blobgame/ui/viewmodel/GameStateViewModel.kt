@@ -15,4 +15,5 @@ class GameStateViewModel(
     fun attack(message: AttackMessage) { repository.attack(message) }
     fun move(message: MoveMessage) { repository.move(message) }
     fun disconnect() { repository.disconnect() }
+    override fun onCleared() { repository.disconnect() }
 }
