@@ -17,13 +17,15 @@ class GameRoomViewModel(private val repository: GameRoomRepository): ViewModel()
     val currentRoom = _currentRoom.asStateFlow()
     fun createRoom(playerId: GameRoomRequest, maxPlayers: Int, roomName: String) {
         viewModelScope.launch {
-            repository.createRoom(playerId, maxPlayers, roomName)
+            val room = repository.createRoom(playerId, maxPlayers, roomName)
+            _currentRoom.value = room
         }
     }
 
     fun joinRoom(roomCode: String, playerId: GameRoomRequest) {
         viewModelScope.launch {
-            repository.joinRoom(roomCode, playerId)
+            val room = repository.joinRoom(roomCode, playerId)
+            _currentRoom.value = room
         }
     }
 
