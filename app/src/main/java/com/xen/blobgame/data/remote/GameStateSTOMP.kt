@@ -81,9 +81,13 @@ class GameStateSTOMP {
         stompClient.send("/app/move", json).subscribe()
     }
 
-    fun sendStartGame(roomId: String) {
-        val json = Json.encodeToString(mapOf("roomId" to roomId))
-        println("📤 Requesting initial game state for room: $roomId")
+    fun sendStartGame(roomId: UUID, playerId: UUID) {
+        val message = mapOf(
+            "roomId" to roomId.toString(),
+            "playerId" to playerId.toString()
+        )
+        val json = Json.encodeToString(message)
+        println("📤 Requesting game start for room: $roomId")
         stompClient.send("/app/start-game", json).subscribe()
     }
 

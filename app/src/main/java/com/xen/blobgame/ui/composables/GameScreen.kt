@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.remote.creation.compose.state.toString
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.xen.blobgame.data.remote.Status
 import com.xen.blobgame.data.remote.serializer.AttackMessage
 import com.xen.blobgame.data.remote.serializer.MoveMessage
 import com.xen.blobgame.data.remote.serializer.PlayerModel
@@ -96,8 +98,6 @@ fun GameScreen(
     // ── Lifecycle: connect on entry, disconnect on exit ───────────────────────
     LaunchedEffect(currentRoomId) {
         gameStateViewModel.connect(currentRoomId)
-        // ✅ NEW: Request initial game state
-        gameStateViewModel.requestInitialState(currentRoomId)
     }
     DisposableEffect(Unit) {
         onDispose { gameStateViewModel.disconnect() }
@@ -152,81 +152,121 @@ fun GameScreen(
 
     // ── Attack pulse animation ────────────────────────────────────────────────
     var attackFlash by remember { mutableStateOf(false) }
-
+    val isHost = player?.id.toString() == room?.hostId
+    val gameStarted = room?.status == Status.ONGOING
+    val isWaiting = room?.status == Status.WAITING
+    val playersNeeded = (room?.maxPlayers ?: 0) - (room?.numOfPlayers ?: 0)
     // ── Layout ────────────────────────────────────────────────────────────────
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF0D1117)), // near-black game background
     ) {
-
-        // ── Game arena ───────────────────────────────────────────────────────
-        GameArena(
-            players = players,
-            modifier = Modifier.fillMaxSize(),
-        )
-
-        // ── Current-player HUD: health bar top-left ──────────────────────────
-        currentPlayer?.let { me ->
-            PlayerHUD(
-                player = me,
+        if (isWaiting) {
+            Box(
                 modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(16.dp),
-            )
-        }
+                    .fillMaxSize()
+                    .background(Color(0xFF0D1117)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        "Waiting for players...",
+                        color = Color.White,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "Players: ${room?.numOfPlayers}/${room?.maxPlayers}",
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 16.sp
+                    )
 
-        // ── Dead overlay ─────────────────────────────────────────────────────
-        if (currentPlayer?.model?.playerGameState?.isDead == true) {
-            DeadOverlay(onGameDone = onGameDone)
-        }
-
-        // ── Bottom controls: Joystick (left) + Attack button (right) ─────────
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(bottom = 32.dp, start = 24.dp, end = 24.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Joystick(
-                onDelta = { joystickDelta = it },
-                onRelease = { joystickDelta = Offset.Zero },
-            )
-
-            AttackButton(
-                flash = attackFlash,
-                onClick = {
-                    // Attack the nearest living enemy
-                    val target = players
-                        .filter { it.model.id != currentPlayerId && !it.model.playerGameState.isDead }
-                        .minByOrNull { p ->
-                            val me = currentPlayer?.model?.playerGameState
-                            if (me == null) Float.MAX_VALUE
-                            else hypot(
-                                (p.model.playerGameState.posX - me.posX).toDouble(),
-                                (p.model.playerGameState.posY - me.posY).toDouble(),
-                            ).toFloat()
+                    if (isHost && playersNeeded > 0) {
+                        Spacer(Modifier.height(24.dp))
+                        Button(
+                            onClick = { gameStateViewModel.requestStartGame(UUID.fromString(currentRoomId), currentPlayerId) }
+                        ) {
+                            Text("Start Game Now")
                         }
-                    if (target != null) {
-                        coroutineScope.launch {
-                            attackFlash = true
-                            delay(200)
-                            attackFlash = false
-                        }
-                        gameStateViewModel.attack(
-                            AttackMessage(
-                                roomId     = UUID.fromString(currentRoomId),
-                                attackerId = currentPlayerId,
-                                targetId   = target.model.id,
-                            )
-                        )
                     }
-                },
-            )
+                }
+            }
+            return
         }
-    }
+        if (gameStarted) {
+            // ── Game arena ───────────────────────────────────────────────────────
+            GameArena(
+                players = players,
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            // ── Current-player HUD: health bar top-left ──────────────────────────
+            currentPlayer?.let { me ->
+                PlayerHUD(
+                    player = me,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(16.dp),
+                )
+            }
+
+            // ── Dead overlay ─────────────────────────────────────────────────────
+            if (currentPlayer?.model?.playerGameState?.isDead == true) {
+                DeadOverlay(onGameDone = onGameDone)
+            }
+
+            // ── Bottom controls: Joystick (left) + Attack button (right) ─────────
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp, start = 24.dp, end = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Joystick(
+                    onDelta = { joystickDelta = it },
+                    onRelease = { joystickDelta = Offset.Zero },
+                )
+
+                AttackButton(
+                    flash = attackFlash,
+                    onClick = {
+                        // Attack the nearest living enemy
+                        val target = players
+                            .filter { it.model.id != currentPlayerId && !it.model.playerGameState.isDead }
+                            .minByOrNull { p ->
+                                val me = currentPlayer?.model?.playerGameState
+                                if (me == null) Float.MAX_VALUE
+                                else hypot(
+                                    (p.model.playerGameState.posX - me.posX).toDouble(),
+                                    (p.model.playerGameState.posY - me.posY).toDouble(),
+                                ).toFloat()
+                            }
+                        if (target != null) {
+                            coroutineScope.launch {
+                                attackFlash = true
+                                delay(200)
+                                attackFlash = false
+                            }
+                            gameStateViewModel.attack(
+                                AttackMessage(
+                                    roomId     = UUID.fromString(currentRoomId),
+                                    attackerId = currentPlayerId,
+                                    targetId   = target.model.id,
+                                )
+                            )
+                        }
+                    },
+                )
+            }
+        }
+        }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

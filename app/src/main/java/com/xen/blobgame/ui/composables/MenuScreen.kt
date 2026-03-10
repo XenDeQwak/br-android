@@ -23,7 +23,7 @@ fun MenuScreen(
     var maxPlayersExpanded by remember { mutableStateOf(false) }
     var selectedMaxPlayers by remember { mutableStateOf(4) }
     val player by playerViewModel.currentPlayer.collectAsState()
-    val maxPlayersOptions = (4..10).toList()
+    val maxPlayersOptions = (2..10).toList()
 
     Column(
         modifier = Modifier

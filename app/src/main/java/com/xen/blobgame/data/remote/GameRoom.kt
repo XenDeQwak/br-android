@@ -7,11 +7,12 @@ import java.util.UUID
 
 data class GameRoomModel (
     val id: String,
-    private val roomCode: String,
-    private val status: Status,
-    private val name: String,
-    private val maxPlayers: Int,
-    private val numOfPlayers: Int
+    val roomCode: String,
+    val status: Status,
+    val name: String,
+    val maxPlayers: Int,
+    val numOfPlayers: Int,
+    val hostId: String
 )
 
 data class GameRoomRequest(

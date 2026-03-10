@@ -16,9 +16,11 @@ class GameStateViewModel(
     fun connect(roomId: String) { repository.connect(roomId) }
     fun attack(message: AttackMessage) { repository.attack(message) }
     fun move(message: MoveMessage) { repository.move(message) }
-    fun requestInitialState(roomId: String) { repository.requestInitialState(roomId) }  // ✅ NEW
     fun disconnect() { repository.disconnect() }
     override fun onCleared() { repository.disconnect() }
+    fun requestStartGame(roomId: UUID, playerId: UUID) {
+        repository.requestStartGame(roomId, playerId)
+    }
 
     class Factory(private val repository: PlayerGameStateRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

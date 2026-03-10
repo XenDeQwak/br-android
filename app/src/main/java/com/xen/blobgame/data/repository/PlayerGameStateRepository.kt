@@ -20,6 +20,7 @@ class PlayerGameStateRepository(
 
     fun attack(message: AttackMessage) = socket.sendAttack(message)
     fun move(message: MoveMessage) = socket.sendMove(message)
-    fun requestInitialState(roomId: String) = socket.sendStartGame(roomId)  // ✅ NEW
     fun disconnect() = socket.unSubscribe()
+    fun requestStartGame(roomId: UUID, playerId: UUID) =
+        socket.sendStartGame(roomId, playerId)
 }
