@@ -1,5 +1,6 @@
 package com.xen.blobgame.data.remote.serializer
 
+import com.xen.blobgame.data.remote.Status
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
@@ -24,6 +25,8 @@ data class PlayerModel(
 @Serializable
 data class RoomStateMessage(
     val players: List<PlayerModel>,
+    val status: Status,          // ✅ ADD THIS
+    val hostId: String,          // ✅ ADD THIS
 )
 
 @Serializable

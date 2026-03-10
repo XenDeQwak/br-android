@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.remote.creation.compose.state.toString
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,13 +42,6 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 import kotlin.math.*
 
-// roundToInt is in kotlin.math but needs explicit import when used as extension
-import kotlin.math.roundToInt
-import kotlin.toString
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Deterministic color palette per player index
-// ──────────────────────────────────────────────────────────────────────────────
 private val PLAYER_COLORS = listOf(
     Color(0xFFFF6B6B), // coral-red
     Color(0xFF4ECDC4), // teal
@@ -61,11 +53,6 @@ private val PLAYER_COLORS = listOf(
     Color(0xFFF472B6), // pink
 )
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Data helpers
-// ──────────────────────────────────────────────────────────────────────────────
-
-/** Wraps the server model with a stable color assigned on first sight. */
 private data class PlayerView(
     val model: PlayerModel,
     val color: Color,
@@ -80,8 +67,8 @@ fun GameScreen(
 ) {
     val player by playerViewModel.currentPlayer.collectAsState()
     val room   by gameRoomViewModel.currentRoom.collectAsState()
+    val gameState by gameStateViewModel.gameState.collectAsState(initial = null)
 
-    // Guard: wait until both are resolved before rendering
     val currentPlayerId = player?.id
     val currentRoomId   = room?.id
 
@@ -94,8 +81,7 @@ fun GameScreen(
         }
         return
     }
-    // ── Lifecycle: connect on entry, disconnect on exit ───────────────────────
-    // ── Lifecycle: connect on entry, disconnect on exit ───────────────────────
+
     LaunchedEffect(currentRoomId) {
         gameStateViewModel.connect(currentRoomId)
     }
@@ -103,21 +89,13 @@ fun GameScreen(
         onDispose { gameStateViewModel.disconnect() }
     }
 
-    // ── Observe game state ────────────────────────────────────────────────────
-    // ── Observe game state ────────────────────────────────────────────────────
-    val gameState by gameStateViewModel.gameState.collectAsState(initial = null)
-    println("📡 gameState collected: $gameState")
-    println("📡 gameState?.players: ${gameState?.players}")
-    println("📡 gameState?.players?.size: ${gameState?.players?.size}")
-
-    // Maintain a stable color map so colors don't flicker on re-composition
     val colorMap = remember { mutableMapOf<String, Color>() }
 
     val players: List<PlayerView> = remember(gameState) {
-        println("🔵 GameScreen - gameState in remember: $gameState")
+        println("🔵 GameScreen - gameState: $gameState")
         println("🔵 GameScreen - gameState?.players size: ${gameState?.players?.size}")
         gameState?.players?.map { playerModel ->
-            println("📍 Mapping player: ${playerModel.name} at (${playerModel.playerGameState.posX}, ${playerModel.playerGameState.posY})")
+            println("📍 Mapping player: ${playerModel.name}")
             val color = colorMap.getOrPut(playerModel.id.toString()) {
                 PLAYER_COLORS[colorMap.size % PLAYER_COLORS.size]
             }
@@ -128,11 +106,9 @@ fun GameScreen(
     val currentPlayer = players.find { it.model.id == currentPlayerId }
     println("🎮 GameScreen - currentPlayer found: ${currentPlayer?.model?.name}, total players: ${players.size}")
 
-    // ── Joystick state ────────────────────────────────────────────────────────
     var joystickDelta by remember { mutableStateOf(Offset.Zero) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Continuously send move messages while joystick is held
     LaunchedEffect(joystickDelta) {
         while (joystickDelta != Offset.Zero) {
             val speed = 2f
@@ -146,66 +122,67 @@ fun GameScreen(
                     posY     = newY,
                 )
             )
-            delay(50L) // ~20 fps movement ticks
+            delay(50L)
         }
     }
 
-    // ── Attack pulse animation ────────────────────────────────────────────────
     var attackFlash by remember { mutableStateOf(false) }
-    val isHost = player?.id.toString() == room?.hostId
-    val gameStarted = room?.status == Status.ONGOING
-    val isWaiting = room?.status == Status.WAITING
-    val playersNeeded = (room?.maxPlayers ?: 0) - (room?.numOfPlayers ?: 0)
-    // ── Layout ────────────────────────────────────────────────────────────────
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D1117)), // near-black game background
-    ) {
-        if (isWaiting) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFF0D1117)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        "Waiting for players...",
-                        color = Color.White,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        "Players: ${room?.numOfPlayers}/${room?.maxPlayers}",
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 16.sp
-                    )
 
-                    if (isHost && playersNeeded > 0) {
-                        Spacer(Modifier.height(24.dp))
-                        Button(
-                            onClick = { gameStateViewModel.requestStartGame(UUID.fromString(currentRoomId), currentPlayerId) }
-                        ) {
-                            Text("Start Game Now")
-                        }
+    // ✅ NEW: Use gameState for real-time updates
+    val isHost = player?.id.toString() == gameState?.hostId.toString()
+    val gameStarted = gameState?.status == Status.ONGOING
+    val isWaiting = gameState?.status == Status.WAITING
+    val playersNeeded = (room?.maxPlayers ?: 0) - (gameState?.players?.size ?: 0)
+
+    // ✅ NEW: Show waiting screen
+    if (isWaiting) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0D1117)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    "Waiting for players...",
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    "Players: ${gameState?.players?.size}/${room?.maxPlayers}",
+                    color = Color.White.copy(alpha = 0.7f),
+                    fontSize = 16.sp
+                )
+
+                if (isHost && playersNeeded > 0) {
+                    Spacer(Modifier.height(24.dp))
+                    Button(
+                        onClick = { gameStateViewModel.requestStartGame(UUID.fromString(currentRoomId), currentPlayerId) }
+                    ) {
+                        Text("Start Game Now")
                     }
                 }
             }
-            return
         }
-        if (gameStarted) {
-            // ── Game arena ───────────────────────────────────────────────────────
+        return  // ✅ Early return so game screen doesn't render
+    }
+
+    if (gameStarted) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0D1117)),
+        ) {
             GameArena(
                 players = players,
                 modifier = Modifier.fillMaxSize(),
             )
 
-            // ── Current-player HUD: health bar top-left ──────────────────────────
             currentPlayer?.let { me ->
                 PlayerHUD(
                     player = me,
@@ -215,12 +192,10 @@ fun GameScreen(
                 )
             }
 
-            // ── Dead overlay ─────────────────────────────────────────────────────
             if (currentPlayer?.model?.playerGameState?.isDead == true) {
                 DeadOverlay(onGameDone = onGameDone)
             }
 
-            // ── Bottom controls: Joystick (left) + Attack button (right) ─────────
             Row(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -237,7 +212,6 @@ fun GameScreen(
                 AttackButton(
                     flash = attackFlash,
                     onClick = {
-                        // Attack the nearest living enemy
                         val target = players
                             .filter { it.model.id != currentPlayerId && !it.model.playerGameState.isDead }
                             .minByOrNull { p ->
@@ -266,12 +240,8 @@ fun GameScreen(
                 )
             }
         }
-        }
+    }
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Game Arena – renders all players as colored circles with health bars
-// ──────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun GameArena(
@@ -280,19 +250,16 @@ private fun GameArena(
 ) {
     println("🎯 GameArena - rendering ${players.size} players")
     Canvas(modifier = modifier) {
-        // Subtle grid
         drawGrid(this)
 
         players.forEach { pv ->
-            println("🎨 Drawing player: ${pv.model.name} at (${pv.model.playerGameState.posX}, ${pv.model.playerGameState.posY})")
+            println("🎨 Drawing player: ${pv.model.name}")
             val model = pv.model.playerGameState
             val cx = model.posX * (size.width / 100f)
             val cy = model.posY * (size.height / 100f)
             val radius = 30.dp.toPx()
-            println("🎨 Calculated center: ($cx, $cy) on canvas size (${size.width}, ${size.height})")
 
             if (!model.isDead) {
-                // Glow behind circle
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(pv.color.copy(alpha = 0.35f), Color.Transparent),
@@ -302,16 +269,13 @@ private fun GameArena(
                     radius = radius * 2f,
                     center = Offset(cx, cy),
                 )
-                // Main circle
                 drawCircle(color = pv.color, radius = radius, center = Offset(cx, cy))
-                // Border
                 drawCircle(
                     color = Color.White.copy(alpha = 0.4f),
                     radius = radius,
                     center = Offset(cx, cy),
                     style = Stroke(width = 3f),
                 )
-                // Mini health bar above player
                 drawHealthBarAbove(
                     center = Offset(cx, cy),
                     radius = radius,
@@ -319,7 +283,6 @@ private fun GameArena(
                     color  = pv.color,
                 )
             } else {
-                // Faded X for dead player
                 drawCircle(
                     color  = Color.Gray.copy(alpha = 0.3f),
                     radius = radius,
@@ -370,14 +333,12 @@ private fun DrawScope.drawHealthBarAbove(
     val top   = center.y - radius - 18f
     val fill  = (health.coerceIn(0, 100) / 100f) * barW
 
-    // Background track
     drawRoundRect(
         color        = Color.Black.copy(alpha = 0.5f),
         topLeft      = Offset(left, top),
         size         = Size(barW, barH),
         cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f),
     )
-    // Filled portion
     if (fill > 0f) {
         drawRoundRect(
             color        = color,
@@ -387,10 +348,6 @@ private fun DrawScope.drawHealthBarAbove(
         )
     }
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Player HUD (current player health displayed top-left)
-// ──────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun PlayerHUD(player: PlayerView, modifier: Modifier = Modifier) {
@@ -437,10 +394,6 @@ private fun PlayerHUD(player: PlayerView, modifier: Modifier = Modifier) {
     }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Virtual Joystick
-// ──────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun Joystick(
     baseSize: Dp    = 120.dp,
@@ -468,13 +421,11 @@ private fun Joystick(
                         val dist = raw.getDistance()
                         thumbPos = if (dist <= maxRadius) raw
                         else raw / dist * maxRadius
-                        // Normalize to [-1, 1]
                         onDelta(thumbPos / maxRadius)
                     },
                 )
             },
     ) {
-        // Thumb
         Box(
             modifier = Modifier
                 .offset { IntOffset(thumbPos.x.roundToInt(), thumbPos.y.roundToInt()) }
@@ -490,10 +441,6 @@ private fun Joystick(
     }
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Attack Button
-// ──────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun AttackButton(flash: Boolean, onClick: () -> Unit) {
     val scale by animateFloatAsState(
@@ -508,14 +455,12 @@ private fun AttackButton(flash: Boolean, onClick: () -> Unit) {
     )
 
     Box(contentAlignment = Alignment.Center) {
-        // Outer glow ring
         Box(
             modifier = Modifier
                 .size((90 * scale + 20).dp)
                 .clip(CircleShape)
                 .background(Color(0xFFFF4444).copy(alpha = glowAlpha)),
         )
-        // Button body
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -531,7 +476,6 @@ private fun AttackButton(flash: Boolean, onClick: () -> Unit) {
                     detectTapGestures(onTap = { onClick() })
                 },
         ) {
-            // Tap area via pointerInput above; label below
             Text(
                 text       = "ATTACK",
                 color      = Color.White,
@@ -542,10 +486,6 @@ private fun AttackButton(flash: Boolean, onClick: () -> Unit) {
         }
     }
 }
-
-// ──────────────────────────────────────────────────────────────────────────────
-// Dead overlay
-// ──────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun DeadOverlay(onGameDone: () -> Unit) {
