@@ -152,6 +152,14 @@ fun GameScreen(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Room Code: ${room?.roomCode ?: ""}",
+                    color = Color(0xFF4ECDC4),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 3.sp
+                )
                 Spacer(Modifier.height(16.dp))
                 Text(
                     "Players: ${gameState?.players?.size}/${room?.maxPlayers}",
