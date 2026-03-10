@@ -232,9 +232,8 @@ private fun GameArena(
 
         players.forEach { pv ->
             val model = pv.model.playerGameState
-            // Map server coords [0-500] to canvas pixels
-            val cx = (model.posX / 500f) * size.width
-            val cy = (model.posY / 500f) * size.height
+            val cx = model.posX * (size.width / 100f)
+            val cy = model.posY * (size.height / 100f)
             val radius = 30.dp.toPx()
 
             if (!model.isDead) {
