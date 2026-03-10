@@ -93,8 +93,11 @@ fun GameScreen(
         return
     }
     // ── Lifecycle: connect on entry, disconnect on exit ───────────────────────
+    // ── Lifecycle: connect on entry, disconnect on exit ───────────────────────
     LaunchedEffect(currentRoomId) {
         gameStateViewModel.connect(currentRoomId)
+        // ✅ NEW: Request initial game state
+        gameStateViewModel.requestInitialState(currentRoomId)
     }
     DisposableEffect(Unit) {
         onDispose { gameStateViewModel.disconnect() }

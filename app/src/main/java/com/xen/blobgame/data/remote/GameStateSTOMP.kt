@@ -12,14 +12,17 @@ import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
 import ua.naiksoftware.stomp.dto.StompMessage
+import java.util.UUID
 
 class GameStateSTOMP {
     private val stompClient: StompClient =
         Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws")
     private var roomSubscription: Disposable? = null
     private var lifeCycleDisposable: Disposable? = null
+
     private val _gameState = MutableSharedFlow<RoomStateMessage>(replay = 1)
     val gameState = _gameState.asSharedFlow()
+
     private val json = Json { ignoreUnknownKeys = true }
 
     fun connect() {
@@ -69,13 +72,19 @@ class GameStateSTOMP {
     }
 
     fun sendAttack(message: AttackMessage) {
-        val json = json.encodeToString(message)
+        val json = Json.encodeToString(message)
         stompClient.send("/app/attack", json).subscribe()
     }
 
     fun sendMove(message: MoveMessage) {
-        val json = json.encodeToString(message)
+        val json = Json.encodeToString(message)
         stompClient.send("/app/move", json).subscribe()
+    }
+
+    fun sendStartGame(roomId: String) {
+        val json = Json.encodeToString(mapOf("roomId" to roomId))
+        println("📤 Requesting initial game state for room: $roomId")
+        stompClient.send("/app/start-game", json).subscribe()
     }
 
     fun unSubscribe() {
@@ -85,7 +94,4 @@ class GameStateSTOMP {
         roomSubscription = null
         stompClient.disconnect()
     }
-
-
-
 }

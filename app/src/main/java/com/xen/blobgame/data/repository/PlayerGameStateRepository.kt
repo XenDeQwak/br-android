@@ -6,6 +6,7 @@ import com.xen.blobgame.data.remote.serializer.AttackMessage
 import com.xen.blobgame.data.remote.serializer.MoveMessage
 import com.xen.blobgame.data.remote.serializer.RoomStateMessage
 import kotlinx.coroutines.flow.SharedFlow
+import java.util.UUID
 
 class PlayerGameStateRepository(
     private val socket: GameStateSTOMP
@@ -19,5 +20,6 @@ class PlayerGameStateRepository(
 
     fun attack(message: AttackMessage) = socket.sendAttack(message)
     fun move(message: MoveMessage) = socket.sendMove(message)
+    fun requestInitialState(roomId: String) = socket.sendStartGame(roomId)  // ✅ NEW
     fun disconnect() = socket.unSubscribe()
 }
