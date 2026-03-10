@@ -101,20 +101,29 @@ fun GameScreen(
     }
 
     // ── Observe game state ────────────────────────────────────────────────────
+    // ── Observe game state ────────────────────────────────────────────────────
     val gameState by gameStateViewModel.gameState.collectAsState(initial = null)
+    println("📡 gameState collected: $gameState")
+    println("📡 gameState?.players: ${gameState?.players}")
+    println("📡 gameState?.players?.size: ${gameState?.players?.size}")
 
     // Maintain a stable color map so colors don't flicker on re-composition
     val colorMap = remember { mutableMapOf<String, Color>() }
+
     val players: List<PlayerView> = remember(gameState) {
+        println("🔵 GameScreen - gameState in remember: $gameState")
+        println("🔵 GameScreen - gameState?.players size: ${gameState?.players?.size}")
         gameState?.players?.map { playerModel ->
+            println("📍 Mapping player: ${playerModel.name} at (${playerModel.playerGameState.posX}, ${playerModel.playerGameState.posY})")
             val color = colorMap.getOrPut(playerModel.id.toString()) {
                 PLAYER_COLORS[colorMap.size % PLAYER_COLORS.size]
             }
             PlayerView(model = playerModel, color = color)
-        } ?: emptyList()
+        } ?: emptyList<PlayerView>().also { println("⚠️ Players list is empty or gameState is null") }
     }
 
     val currentPlayer = players.find { it.model.id == currentPlayerId }
+    println("🎮 GameScreen - currentPlayer found: ${currentPlayer?.model?.name}, total players: ${players.size}")
 
     // ── Joystick state ────────────────────────────────────────────────────────
     var joystickDelta by remember { mutableStateOf(Offset.Zero) }
@@ -226,15 +235,18 @@ private fun GameArena(
     players: List<PlayerView>,
     modifier: Modifier = Modifier,
 ) {
+    println("🎯 GameArena - rendering ${players.size} players")
     Canvas(modifier = modifier) {
         // Subtle grid
         drawGrid(this)
 
         players.forEach { pv ->
+            println("🎨 Drawing player: ${pv.model.name} at (${pv.model.playerGameState.posX}, ${pv.model.playerGameState.posY})")
             val model = pv.model.playerGameState
             val cx = model.posX * (size.width / 100f)
             val cy = model.posY * (size.height / 100f)
             val radius = 30.dp.toPx()
+            println("🎨 Calculated center: ($cx, $cy) on canvas size (${size.width}, ${size.height})")
 
             if (!model.isDead) {
                 // Glow behind circle

@@ -18,7 +18,7 @@ class GameStateSTOMP {
         Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws")
     private var roomSubscription: Disposable? = null
     private var lifeCycleDisposable: Disposable? = null
-    private val _gameState = MutableSharedFlow<RoomStateMessage>()
+    private val _gameState = MutableSharedFlow<RoomStateMessage>(replay = 1)
     val gameState = _gameState.asSharedFlow()
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -53,10 +53,12 @@ class GameStateSTOMP {
                     try {
                         val state = json.decodeFromString<RoomStateMessage>(payload)
                         println("✅ Parsed RoomStateMessage with ${state.players.size} players")
+                        println("🎯 About to emit state with ${state.players.size} players")
                         _gameState.tryEmit(state)
+                        println("✅ Emitted successfully")
                     } catch (e: Exception) {
                         println("❌ Failed to parse: ${e.message}")
-                        println("Exception: ${e.stackTrace}")
+                        e.printStackTrace()
                     }
                 },
                 { error ->
