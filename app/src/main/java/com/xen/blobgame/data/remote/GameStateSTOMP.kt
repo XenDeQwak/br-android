@@ -16,7 +16,7 @@ import java.util.UUID
 
 class GameStateSTOMP {
     private val stompClient: StompClient =
-        Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8080/ws")
+        Stomp.over(Stomp.ConnectionProvider.OKHTTP, "ws://10.0.2.2:8081/ws")
     private var roomSubscription: Disposable? = null
     private var lifeCycleDisposable: Disposable? = null
 

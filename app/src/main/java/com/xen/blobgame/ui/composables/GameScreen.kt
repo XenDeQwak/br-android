@@ -169,7 +169,7 @@ fun GameScreen(
                 }
             }
         }
-        return  // ✅ Early return so game screen doesn't render
+        return
     }
 
     if (gameStarted) {
