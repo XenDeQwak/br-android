@@ -20,6 +20,7 @@ class GameStateSTOMP {
     private var lifeCycleDisposable: Disposable? = null
     private val _gameState = MutableSharedFlow<RoomStateMessage>()
     val gameState = _gameState.asSharedFlow()
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun connect() {
         stompClient.connect()
@@ -41,28 +42,37 @@ class GameStateSTOMP {
     }
 
     fun subscribeToRoom(roomId: String) {
+        println("🔵 Subscribing to /topic/room/$roomId")
         roomSubscription = stompClient
             .topic("/topic/room/$roomId")
             .subscribe(
                 { message: StompMessage ->
+                    println("✅ Received message on /topic/room/$roomId")
                     val payload = message.payload
-                    val state = Json.decodeFromString<RoomStateMessage>(payload)
-                    _gameState.tryEmit(state)
-
+                    println("📦 Payload: $payload")
+                    try {
+                        val state = json.decodeFromString<RoomStateMessage>(payload)
+                        println("✅ Parsed RoomStateMessage with ${state.players.size} players")
+                        _gameState.tryEmit(state)
+                    } catch (e: Exception) {
+                        println("❌ Failed to parse: ${e.message}")
+                        println("Exception: ${e.stackTrace}")
+                    }
                 },
                 { error ->
-                    println("Subscription error: ${error.message}")
+                    println("❌ Subscription error: ${error.message}")
+                    error.printStackTrace()
                 }
             )
     }
 
     fun sendAttack(message: AttackMessage) {
-        val json = Json.encodeToString(message)
+        val json = json.encodeToString(message)
         stompClient.send("/app/attack", json).subscribe()
     }
 
     fun sendMove(message: MoveMessage) {
-        val json = Json.encodeToString(message)
+        val json = json.encodeToString(message)
         stompClient.send("/app/move", json).subscribe()
     }
 
